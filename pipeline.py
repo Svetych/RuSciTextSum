@@ -194,7 +194,6 @@ if __name__ == '__main__':
     dataset_train = load_dataset('IlyaGusev/gazeta', revision="v2.0")["train"]
     dataset_val = load_dataset('IlyaGusev/gazeta', revision="v2.0")["validation"]
     dataset_test = load_dataset('IlyaGusev/gazeta', revision="v2.0")["test"]
-    clear_output()
     
     # Создание обучающей и валидационной выборок
     print('Making train dataset')
