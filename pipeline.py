@@ -109,37 +109,57 @@ def read_dataset(model, tokenizer, max_length_text=2890, max_length_ref=200, n=5
     return dataset
 
 def train_test_model(model, tokenizer, optimizer,
-                     test_dataset,
+                     train_dataset, val_dataset, test_dataset,
                      num_steps=1, ):
     '''
     Обучение + тестирование + логирование
     '''
 
     for step in range(1, num_steps+1):
-        # параметры для Тренера
-        training_args = TrainingArguments(
-            output_dir= checkpoint_path,
-            overwrite_output_dir=True,
-            per_device_train_batch_size=2,
-            per_device_eval_batch_size=2,
-            num_train_epochs=1,
-            warmup_steps=10,
-            gradient_accumulation_steps=16,
-            evaluation_strategy="epoch",
-            save_strategy="epoch",
-            load_best_model_at_end=True,
-            seed=42,
-        )
-        
-        # Тренер
-        trainer = Trainer(
-            model=model_t5,
-            args=training_args,
-            train_dataset=dataset_train,
-            eval_dataset=dataset_val,
-            tokenizer=tokenizer,
-            optimizers = (optimizer, None)
-        )      
+        # Тренер и параметры
+        if val_dataset is None:
+            training_args = TrainingArguments(
+                output_dir= checkpoint_path,
+                overwrite_output_dir=True,
+                per_device_train_batch_size=2,
+                num_train_epochs=1,
+                warmup_steps=10,
+                gradient_accumulation_steps=16,
+                save_strategy="epoch",
+                load_best_model_at_end=True,
+                seed=42,
+            )
+
+            trainer = Trainer(
+                model=model_t5,
+                args=training_args,
+                train_dataset=train_dataset,
+                tokenizer=tokenizer,
+                optimizers = (optimizer, None)
+            )
+        else:
+            training_args = TrainingArguments(
+                output_dir= checkpoint_path,
+                overwrite_output_dir=True,
+                per_device_train_batch_size=2,
+                per_device_eval_batch_size=2,
+                num_train_epochs=1,
+                warmup_steps=10,
+                gradient_accumulation_steps=16,
+                evaluation_strategy="epoch",
+                save_strategy="epoch",
+                load_best_model_at_end=True,
+                seed=42,
+            )
+
+            trainer = Trainer(
+                model=model_t5,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=val_dataset,
+                tokenizer=tokenizer,
+                optimizers = (optimizer, None)
+            )
         
         # Обучение модели
         model.train()
@@ -235,7 +255,9 @@ if __name__ == '__main__':
     
     num_steps = 1
     
-    train_test_model(model_t5, tokenizer, optimizer, dataset_test, num_steps=num_steps)
+    train_test_model(model_t5, tokenizer, optimizer,
+                     dataset_train, dataset_val, dataset_test,
+                     num_steps=num_steps)
     
     ## Тестирование на своей выборке текстов:
     
@@ -253,32 +275,12 @@ if __name__ == '__main__':
             data = data.split('\n\n')
             test_set.append({'text': data[1], 'summary': data[2]})
     
-    # параметры для Тренера
-    training_args = TrainingArguments(
-        output_dir= checkpoint_path,
-        overwrite_output_dir=True,
-        per_device_train_batch_size=2,
-        num_train_epochs=1,
-        warmup_steps=10,
-        gradient_accumulation_steps=16,
-        save_strategy="epoch",
-        load_best_model_at_end=True,
-        seed=42,
-    )
-    
-    # Тренер
-    trainer = Trainer(
-        model=model_t5,
-        args=training_args,
-        train_dataset=train_set,
-        tokenizer=tokenizer,
-        optimizers = (optimizer, None)
-    )
-    
     #Обучение + тестирование:    
     num_steps = 1
     
-    train_test_model(model_t5, tokenizer, optimizer, trainer, test_set, num_steps=num_steps)
+    train_test_model(model_t5, tokenizer, optimizer,
+                     train_set, None, test_set,
+                     num_steps=num_steps)
     
     ### Тестирование на своей выборке текстов:
     
