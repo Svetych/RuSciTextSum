@@ -18,8 +18,8 @@ def getpreferredencoding(do_setlocale = True):
 locale.getpreferredencoding = getpreferredencoding
 
 from transformers import (
-    T5ForConditionalGeneration, T5TokenizerFast, T5Tokenizer,
-    DataCollatorForLanguageModeling, TrainingArguments, Trainer,
+    T5ForConditionalGeneration, T5Tokenizer,
+    TrainingArguments, Trainer,
 )
 from datasets import load_dataset
 from rouge import Rouge
@@ -99,7 +99,7 @@ def read_dataset(model, tokenizer, max_length_text=2890, max_length_ref=200, n=5
     '''
     dataset = []
     for i in range(n):
-        with open(dataset_path + f'/{i}.txt') as f:
+        with open(dataset_path + f'/{i}.txt', 'r', encoding='utf-8') as f:
             data = f.read()
         data = data.split('\n\n')
         txt = tokenizer(data[1], add_special_tokens=True, max_length=max_length_text, padding="max_length", truncation=True)
@@ -110,7 +110,7 @@ def read_dataset(model, tokenizer, max_length_text=2890, max_length_ref=200, n=5
 
 def train_test_model(model, tokenizer, optimizer,
                      train_dataset, val_dataset, test_dataset,
-                     num_steps=1, ):
+                     num_steps=1, num_epochs=1):
     '''
     Обучение + тестирование + логирование
     '''
@@ -119,57 +119,60 @@ def train_test_model(model, tokenizer, optimizer,
         # Тренер и параметры
         if val_dataset is None:
             training_args = TrainingArguments(
-                output_dir= checkpoint_path,
-                overwrite_output_dir=True,
-                per_device_train_batch_size=2,
-                num_train_epochs=1,
-                warmup_steps=10,
-                gradient_accumulation_steps=16,
-                save_strategy="epoch",
-                load_best_model_at_end=True,
-                seed=42,
-            )
-
+                        output_dir= checkpoint_path,
+                        overwrite_output_dir=True,
+                        per_device_train_batch_size=2,
+                        num_train_epochs=num_epochs,
+                        warmup_steps=10,
+                        gradient_accumulation_steps=16,
+                        save_strategy="epoch",
+                        seed=42,
+                    )
+        
             trainer = Trainer(
-                model=model_t5,
-                args=training_args,
-                train_dataset=train_dataset,
-                tokenizer=tokenizer,
-                optimizers = (optimizer, None)
-            )
+                        model=model,
+                        args=training_args,
+                        train_dataset=train_dataset,
+                        tokenizer=tokenizer,
+                        optimizers = (optimizer, None)
+                    )
         else:
             training_args = TrainingArguments(
-                output_dir= checkpoint_path,
-                overwrite_output_dir=True,
-                per_device_train_batch_size=2,
-                per_device_eval_batch_size=2,
-                num_train_epochs=1,
-                warmup_steps=10,
-                gradient_accumulation_steps=16,
-                evaluation_strategy="epoch",
-                save_strategy="epoch",
-                load_best_model_at_end=True,
-                seed=42,
-            )
+                    output_dir= checkpoint_path,
+                    overwrite_output_dir=True,
+                    per_device_train_batch_size=2,
+                    per_device_eval_batch_size=2,
+                    num_train_epochs=num_epochs,
+                    warmup_steps=10,
+                    gradient_accumulation_steps=16,
+                    evaluation_strategy="no",
+                    save_strategy="epoch",
+                    seed=42,
+                )
 
             trainer = Trainer(
-                model=model_t5,
-                args=training_args,
-                train_dataset=train_dataset,
-                eval_dataset=val_dataset,
-                tokenizer=tokenizer,
-                optimizers = (optimizer, None)
-            )
+                    model=model,
+                    args=training_args,
+                    train_dataset=train_dataset,
+                    eval_dataset=val_dataset,
+                    tokenizer=tokenizer,
+                    optimizers = (optimizer, None)
+                )
         
         # Обучение модели
         model.train()
-        logs = trainer.train()
+        logs_train = trainer.train()
+        logs_eval = None
+        if val_dataset is not None:
+            model.eval()
+            logs_eval = trainer.evaluate()
+    
         print('Saving model')
-        save(saved_model_path + f'/model_t5_small_5_{step}.pth', model, optimizer)
-
+        save(saved_model_path + f'/model_t5_small_6_{step}.pth', model, optimizer)
+    
         print('Saving loss')
         with open(logs_path + f'/loss_dictionary.txt','a') as f:
-            f.write(f'Step_{step}\nTRAIN LOG:\n{logs}\n')
+            f.write(f'Step_{step}\nTRAIN LOG:\n{logs_train}\nEVAL LOG:\n{logs_eval}\n\n')
 
         # Тестирование модели
         model.eval()
@@ -270,7 +273,7 @@ if __name__ == '__main__':
     
     test_set = []
     for i in range(50, 70):
-        with open(dataset_path + f'/{i}.txt') as f:
+        with open(dataset_path + f'/{i}.txt', 'r', encoding='utf-8') as f:
             data = f.read()
             data = data.split('\n\n')
             test_set.append({'text': data[1], 'summary': data[2]})
