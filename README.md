@@ -22,6 +22,10 @@ https://drive.google.com/drive/folders/1YWwnGua7Eh1LKGEVwwq8Hsep8R6f6zET?usp=sha
 
 Собранные датасеты находятся в директории /dataset
 
+Обработка текстовой коллекции: https://disk.yandex.ru/d/UW1_0JASBxJUbw
+
+Процесс перевода arxiv: https://disk.yandex.ru/d/c_gE8O4fpPj1_w
+
 Директория /experiments содержит ipynb ноутбуки с проведенными экспериментами и рассчетами, проведенными в рамках работы.
 
 В директории /texts содержатся тексты, для которых проводилась экспертная оценка.
