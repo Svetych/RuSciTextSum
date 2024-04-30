@@ -37,9 +37,10 @@ path = '.'
 saved_model_path = path + '/archive'
 checkpoint_path = path + '/t5-model-small'
 logs_path = checkpoint_path + '/logs'
-dataset_path = path + '/dataset'
+dataset_path_1 = path + '/dataset/ruscitext'
+dataset_path_2 = path + '/dataset/ruarxiv'
 model_name = "cointegrated/rut5-small"
-pretrained_model = saved_model_path + '/model_t5_small_4.pth'
+pretrained_model = saved_model_path + '/model_t5_small_5_7.pth'
 test_path = path + '/texts'
 
 # Устройство ускорителя:
@@ -87,126 +88,137 @@ def tests_res(data, model, tokenizer, max_length_text=2890):
     '''
     res, ref = [], []
     for inst in tqdm(data):
-        res.append(summarize(inst['text'], model, tokenizer))
+        res.append(summarize(inst['text'], model, tokenizer, max_length_text=max_length_text))
         ref.append(inst['summary'])
     return res, ref
 
-def read_dataset(model, tokenizer, max_length_text=2890, max_length_ref=200, n=50):
+def read_dataset(tokenizer, dataset_path = dataset_path_1, n=100, title=True, ex = []):
     '''
-    Создать датасет для обучения (для чтения из директории)
+    Создать датасет для обучения (для чтения из директории).
+        n     - количество текстов для чтения
+        title - есть ли заголовок в файле
+        ex    - тексты, которые не включать в выборку
 
     Возвращает преобразованный датасет (list)
     '''
     dataset = []
+    txt_i = 1 if title else 0
+    sum_i = txt_i+1
     for i in range(n):
-        with open(dataset_path + f'/{i}.txt', 'r', encoding='utf-8') as f:
-            data = f.read()
-        data = data.split('\n\n')
-        txt = tokenizer(data[1], add_special_tokens=True, max_length=max_length_text, padding="max_length", truncation=True)
-        sum_ = tokenizer(data[2], add_special_tokens=True, max_length=max_length_ref, padding="max_length", truncation=True).input_ids
-        txt["labels"] = sum_
-        dataset.append(txt)
+        if i not in ex:
+            with open(dataset_path + f'/{i}.txt', 'r', encoding='utf-8') as f:
+                data = f.read()
+            data = data.split('\n\n')
+            txt = tokenizer(data[txt_i], max_length=5800, padding="max_length", add_special_tokens=True)
+            sum_ = tokenizer(data[sum_i], add_special_tokens=True).input_ids
+            txt["labels"] = sum_
+            dataset.append(txt)
     return dataset
 
-def train_test_model(model, tokenizer, optimizer,
-                     train_dataset, val_dataset, test_dataset,
-                     num_steps=1, num_epochs=1):
+def train_test_model (model, tokenizer, optimizer,
+                      train_dataset = None, val_dataset = None, test_dataset = None,
+                      num_steps=1, num_epochs=1, model_num=10, step_=0):
     '''
-    Обучение + тестирование + логирование
+    Обучение и тестирование модели
+        num_steps  - количество шагов (обучение + логирование + тестирование)
+        num_epochs - количество эпох в 1 шаге
+        model_num  - номер модели (название при сохранении и логировании)
+        step_      - шаги считать от (используется при сохранении и логировании)
     '''
-
     for step in range(1, num_steps+1):
         # Тренер и параметры
-        if val_dataset is None:
-            training_args = TrainingArguments(
-                        output_dir= checkpoint_path,
-                        overwrite_output_dir=True,
-                        per_device_train_batch_size=2,
-                        num_train_epochs=num_epochs,
-                        warmup_steps=10,
-                        gradient_accumulation_steps=16,
-                        save_strategy="epoch",
-                        seed=42,
-                    )
-        
-            trainer = Trainer(
-                        model=model,
-                        args=training_args,
-                        train_dataset=train_dataset,
-                        tokenizer=tokenizer,
-                        optimizers = (optimizer, None)
-                    )
-        else:
-            training_args = TrainingArguments(
-                    output_dir= checkpoint_path,
-                    overwrite_output_dir=True,
-                    per_device_train_batch_size=2,
-                    per_device_eval_batch_size=2,
-                    num_train_epochs=num_epochs,
-                    warmup_steps=10,
-                    gradient_accumulation_steps=16,
-                    evaluation_strategy="no",
-                    save_strategy="epoch",
-                    seed=42,
-                )
+        if train_dataset is not None:
+            if val_dataset is None:
+                training_args = TrainingArguments(
+                  output_dir= checkpoint_path,
+                  overwrite_output_dir=True,
+                  per_device_train_batch_size=1,
+                  num_train_epochs=num_epochs,
+                  warmup_steps=10,
+                  gradient_accumulation_steps=16,
+                  save_strategy="epoch",
+                  seed=42,
+              )
 
-            trainer = Trainer(
-                    model=model,
-                    args=training_args,
-                    train_dataset=train_dataset,
-                    eval_dataset=val_dataset,
-                    tokenizer=tokenizer,
-                    optimizers = (optimizer, None)
-                )
-        
-        # Обучение модели
-        model.train()
-        logs_train = trainer.train()
-        logs_eval = None
-        if val_dataset is not None:
+                trainer = Trainer(
+                  model=model,
+                  args=training_args,
+                  train_dataset=train_dataset,
+                  tokenizer=tokenizer,
+                  optimizers = (optimizer, None)
+              )
+            else:
+                training_args = TrainingArguments(
+                  output_dir= checkpoint_path,
+                  overwrite_output_dir=True,
+                  per_device_train_batch_size=1,
+                  per_device_eval_batch_size=1,
+                  num_train_epochs=num_epochs,
+                  warmup_steps=10,
+                  gradient_accumulation_steps=16,
+                  evaluation_strategy="no",
+                  save_strategy="epoch",
+                  seed=42,
+              )
+
+                trainer = Trainer(
+                  model=model,
+                  args=training_args,
+                  train_dataset=train_dataset,
+                  eval_dataset=val_dataset,
+                  tokenizer=tokenizer,
+                  optimizers = (optimizer, None)
+              )
+
+            # Обучение модели
+            model.train()
+            logs_train = trainer.train()
+            logs_eval = None
+            if val_dataset is not None:
+                model.eval()
+                logs_eval = trainer.evaluate()
+
+            print('Saving model')
+            save(saved_model_path + f'/model_t5_small_{model_num}_{step+step_}.pth', model, optimizer)
+
+            print('Saving loss')
+            with open(logs_path + f'/loss_dictionary.txt','a') as f:
+                f.write(f'Step_{step+step_}\nTRAIN LOG:\n{logs_train}\nEVAL LOG:\n{logs_eval}\n\n')
+
+        if test_dataset is not None:
+            # Тестирование модели
             model.eval()
-            logs_eval = trainer.evaluate()
-    
-        print('Saving model')
-        save(saved_model_path + f'/model_t5_small_6_{step}.pth', model, optimizer)
-    
-        print('Saving loss')
-        with open(logs_path + f'/loss_dictionary.txt','a') as f:
-            f.write(f'Step_{step}\nTRAIN LOG:\n{logs_train}\nEVAL LOG:\n{logs_eval}\n\n')
+            print('Testing')
+            model_results, refs = tests_res(test_dataset, model, tokenizer) # результаты работы модели
 
-        # Тестирование модели
-        model.eval()
-        print('Testing')
-        model_results, refs = tests_res(test_dataset, model, tokenizer) # результаты работы модели
+            # Оценка ROUGE
+            print('Done! Counting Rouge')
+            scores = rouge.get_scores(model_results, refs, avg=True)
+            print(scores)
 
-        # Оценка ROUGE
-        print('Done! Counting Rouge')
-        scores = rouge.get_scores(model_results, refs, avg=True)
-        print(scores)
+            # Оценка BLEU
+            print('Done! Counting BLEU')
+            blue = corpus_bleu([[r.split(" ")] for r in refs], [hyp.split(" ") for hyp in model_results])
+            print(blue)
 
-        # Оценка BLEU
-        print('Done! Counting BLEU')
-        blue = corpus_bleu([[r.split(" ")] for r in refs], [hyp.split(" ") for hyp in model_results])
-        print(blue)
+            # Оценка METEOR
+            print('Done! Counting METEOR')
+            results_m = meteor.compute(predictions=model_results, references=refs)
+            print(results_m)
 
-        # Оценка METEOR
-        print('Done! Counting METEOR')
-        results_m = meteor.compute(predictions=model_results, references=refs)
-        print(results_m)
+            # Оценка BertScore
+            print('Done! Counting BertScore')
+            results_b = bertscore.compute(predictions=model_results, references=refs, lang="ru")
+            results_b = {k: np.mean(v) for k, v in list(results_b.items())[:-1]}
+            print(results_b)
 
-        # Оценка BertScore
-        print('Done! Counting BertScore')
-        results_b = bertscore.compute(predictions=model_results, references=refs, lang="ru")
-        results_b = {k: np.mean(v) for k, v in list(results_b.items())[:-1]}
-        print(results_b)
-
-        print('Saving scores')
-        with open(logs_path + f'/metrics.txt', 'a') as f:
-            f.write(f'STEP: {step}\n')
-            f.write(f'ROUGE: {scores}\n')
-            f.write(f'BLEU: {blue}\n')
-            f.write(f'METEOR: {results_m}\n')
-            f.write(f'BertScore: {results_b}\n\n')
+            print('Saving scores')
+            with open(logs_path + f'/metrics.txt', 'a') as f:
+                f.write(f'STEP: {step+step_}\n')
+                f.write(f'ROUGE: {scores}\n')
+                f.write(f'BLEU: {blue}\n')
+                f.write(f'METEOR: {results_m}\n')
+                f.write(f'BertScore: {results_b}\n\n')
 
 def for_human_eval(model, n=64):
     '''
@@ -262,7 +274,7 @@ if __name__ == '__main__':
                      dataset_train, dataset_val, dataset_test,
                      num_steps=num_steps)
     
-    ## Тестирование на своей выборке текстов:
+    ### Тестирование на своей выборке текстов:
     
     for_human_eval(model_t5)
     
@@ -272,8 +284,8 @@ if __name__ == '__main__':
     train_set = read_dataset(model_t5, tokenizer)
     
     test_set = []
-    for i in range(50, 70):
-        with open(dataset_path + f'/{i}.txt', 'r', encoding='utf-8') as f:
+    for i in range(90, 100):
+        with open(dataset_path_1 + f'/{i}.txt', 'r', encoding='utf-8') as f:
             data = f.read()
             data = data.split('\n\n')
             test_set.append({'text': data[1], 'summary': data[2]})

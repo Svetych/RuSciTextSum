@@ -1,0 +1,60 @@
+Step_1
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.8620182673136393, metrics={'train_runtime': 514.9241, 'train_samples_per_second': 0.468, 'train_steps_per_second': 0.029, 'train_loss': 0.8620182673136393, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.7035068273544312, 'eval_runtime': 12.1626, 'eval_samples_per_second': 2.22, 'eval_steps_per_second': 2.22, 'epoch': 1.0}
+
+Step_2
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.8105343500773112, metrics={'train_runtime': 512.5329, 'train_samples_per_second': 0.47, 'train_steps_per_second': 0.029, 'train_loss': 0.8105343500773112, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6737300157546997, 'eval_runtime': 12.0443, 'eval_samples_per_second': 2.242, 'eval_steps_per_second': 2.242, 'epoch': 1.0}
+
+Step_3
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.776827875773112, metrics={'train_runtime': 512.2573, 'train_samples_per_second': 0.47, 'train_steps_per_second': 0.029, 'train_loss': 0.776827875773112, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.677889347076416, 'eval_runtime': 12.0503, 'eval_samples_per_second': 2.241, 'eval_steps_per_second': 2.241, 'epoch': 1.0}
+
+Step_4
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.7515774408976237, metrics={'train_runtime': 513.484, 'train_samples_per_second': 0.469, 'train_steps_per_second': 0.029, 'train_loss': 0.7515774408976237, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6672022938728333, 'eval_runtime': 12.0442, 'eval_samples_per_second': 2.242, 'eval_steps_per_second': 2.242, 'epoch': 1.0}
+
+Step_5
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.7299936294555665, metrics={'train_runtime': 513.4811, 'train_samples_per_second': 0.469, 'train_steps_per_second': 0.029, 'train_loss': 0.7299936294555665, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6731041669845581, 'eval_runtime': 12.049, 'eval_samples_per_second': 2.241, 'eval_steps_per_second': 2.241, 'epoch': 1.0}
+
+Step_6
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.7103700637817383, metrics={'train_runtime': 512.9357, 'train_samples_per_second': 0.47, 'train_steps_per_second': 0.029, 'train_loss': 0.7103700637817383, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6690769195556641, 'eval_runtime': 12.0629, 'eval_samples_per_second': 2.238, 'eval_steps_per_second': 2.238, 'epoch': 1.0}
+
+Step_7
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.6917633056640625, metrics={'train_runtime': 513.8095, 'train_samples_per_second': 0.469, 'train_steps_per_second': 0.029, 'train_loss': 0.6917633056640625, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6753292083740234, 'eval_runtime': 12.0677, 'eval_samples_per_second': 2.237, 'eval_steps_per_second': 2.237, 'epoch': 1.0}
+
+Step_8
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.6738756179809571, metrics={'train_runtime': 512.9423, 'train_samples_per_second': 0.47, 'train_steps_per_second': 0.029, 'train_loss': 0.6738756179809571, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6751843094825745, 'eval_runtime': 12.054, 'eval_samples_per_second': 2.24, 'eval_steps_per_second': 2.24, 'epoch': 1.0}
+
+Step_9
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.6561537424723307, metrics={'train_runtime': 512.9465, 'train_samples_per_second': 0.47, 'train_steps_per_second': 0.029, 'train_loss': 0.6561537424723307, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6833508610725403, 'eval_runtime': 12.0468, 'eval_samples_per_second': 2.241, 'eval_steps_per_second': 2.241, 'epoch': 1.0}
+
+Step_10
+TRAIN LOG:
+TrainOutput(global_step=15, training_loss=0.6388845443725586, metrics={'train_runtime': 512.9995, 'train_samples_per_second': 0.47, 'train_steps_per_second': 0.029, 'train_loss': 0.6388845443725586, 'epoch': 1.0})
+EVAL LOG:
+{'eval_loss': 0.6870437860488892, 'eval_runtime': 12.0495, 'eval_samples_per_second': 2.241, 'eval_steps_per_second': 2.241, 'epoch': 1.0}
+
